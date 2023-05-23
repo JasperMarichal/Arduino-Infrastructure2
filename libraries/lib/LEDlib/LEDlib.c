@@ -126,3 +126,17 @@ void flashLed(int led, int flashes)
         lightDownOneLed(led);
     }
 }
+
+void ledChaos(){
+    srand(0);
+    enableAllLeds();
+    lightDownAllLeds();
+
+    for (int i = 0; i < 100; i++)
+    {
+        int led = rand() % 4;
+        lightUpOneLed(led);
+        _delay_ms(100);
+        lightDownOneLed(led);
+    }
+}

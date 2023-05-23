@@ -40,4 +40,5 @@ void blinkLed(int lednumber, int duration);
 void flashLed(int led, int flashes); 
 // This is the function of Basic C exersice three
 
-// Overall, this code provides a set of functions for enabling, turning on/off, toggling, and manipulating multiple LEDs using a bitmask.
+void ledChaos();
+/* Overall, this code provides a set of functions for enabling, turning on/off, toggling, and manipulating multiple LEDs using a bitmask.*/
