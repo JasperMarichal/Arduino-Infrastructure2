@@ -2,16 +2,7 @@
 #define SEVENFOLD 7
 #include <stdio.h>
 #include <stdlib.h>
-
-int main(void) {
-  int array[] = { 0, 0 ,0 ,0, 0 };
-      printArray(array);
-      makeArray(array);
-      printArray(array);
-      printf("\n");
-
-      return 0;
-}
+#include <usart.h>
 
 void printArray(int array[MAX_INT]) {
     printf("Content of array:\n");
@@ -24,4 +15,16 @@ void makeArray(int array[]) {
     for (int i = 0; i < MAX_INT; i++) {
         array[i] = i * SEVENFOLD;
     }
+}
+
+int main(void) {
+    initUSART();
+
+  int array[] = { 0, 0 ,0 ,0, 0 };
+      printArray(array);
+      makeArray(array);
+      printArray(array);
+      printf("\n");
+
+      return 0;
 }

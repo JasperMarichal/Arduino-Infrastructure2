@@ -2,18 +2,7 @@
 #define NAME_LENGTH 10
 #include <stdio.h>
 #include <string.h>
-
-int main(void){
-  char names[MAX_STRING][NAME_LENGTH] = { "Lucky", "Wout", "Ard", "Martin", "Sean", "Anton", "Tjalma"};
-    printFirstLetters(names);
-    printf("\n");
-    printLastLetters(names);
-    
-    char *smallest = searchShortestName(names);
-    printf("\nShortest = %s\n", smallest);
-
-    return 0;
-}
+#include <usart.h>
 
 void printFirstLetters(char string[MAX_STRING][NAME_LENGTH])
 {
@@ -46,4 +35,18 @@ char *searchShortestName(char string[MAX_STRING][NAME_LENGTH])
   }
 
   return string[index];
+}
+
+int main(void){
+  initUSART(); 
+  
+  char names[MAX_STRING][NAME_LENGTH] = { "Lucky", "Wout", "Ard", "Martin", "Sean", "Anton", "Tjalma"};
+    printFirstLetters(names);
+    printf("\n");
+    printLastLetters(names);
+    
+    char *smallest = searchShortestName(names);
+    printf("\nShortest = %s\n", smallest);
+
+    return 0;
 }

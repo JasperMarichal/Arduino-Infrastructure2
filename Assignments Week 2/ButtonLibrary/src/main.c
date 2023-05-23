@@ -1,7 +1,7 @@
 #include <buttonLib.h>
 #include <usart.h>
 
-void main(){
+int main(){
 
     initUSART();
 
@@ -23,4 +23,5 @@ void main(){
             printf("Button 2 bushed\n");
         }
     }
+    return 0;
 }
