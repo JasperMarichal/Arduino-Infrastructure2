@@ -3,54 +3,66 @@
 #include <util/delay.h>
 #include <ledlib.h>
 
-void main(){
-  task5(3);
+int main(){
+char line[] = "aabdcbcadcbadcbdab";
+task8(line);
+
+  return 0;
 }
 
 void task1(void) {
+    while(1) {
     for (int i = 0; i < 4; i++) {
-        enableLed(i);
-        lightUpLed(i);
-        _delay_ms(100);
-        lightDownLed(i);
+        enableOneLed(i);
+        lightUpOneLed(i);
+        _delay_ms(500);
+    }
+    lightDownAllLeds();
+    _delay_ms(100);
     }
 }
 
 void task2(){
     int led = 0;
-    enableLed(led);
-
+    enableOneLed(led);
+    
     for (int i = 0; i < 10; i++) {
-        blinkLed(led, 100);
+        lightUpOneLed(led);
+        _delay_ms(500);
+        lightDownOneLed(led);
     }
 }
 
-void task3(int led, int flashes) 
+void task3(int led, int flashes) //Function LEDlib
 {
-  //flashLed(led, flashes); (Function in LEDlib)
-    enableLed(led);
-
+    enableOneLed(led);
     for (int i = 0; i < flashes; i++) {
-        blinkLed(led, 100);
+        lightUpOneLed(led);
+        _delay_ms(500);
+        lightDownOneLed(led);
     }
 }
 
 void task4(int led) 
 {
-    enableLed(led);
+    enableOneLed(led);
 
     for (int i = 10; i <= 1000; i += 50) {
-        blinkLed(led, i);
+        lightUpOneLed(led);
+        _delay_ms(i);
+        lightDownOneLed(led);
     }
 }
 
-void task5(int arr[]) 
+void task5(int arr[10]) 
 {
-    enableMultipleLeds(0b00001111);
+    enableAllLeds();
 
     for (int i = 0; i < 10; i++) {
         int led = arr[i];
-        blinkLed(led, 1000);
+        lightUpOneLed(led);
+        _delay_ms(1000);
+        lightDownOneLed(led);
     }
 }
 
@@ -60,11 +72,10 @@ void task6(void)
     int arr[length];
     int value = 10, led = 0;
 
-    enableLed(led);
+    enableOneLed(led);
 
     for (int i = 0; i < length; i++, value += 50) {
         arr[i] = value;
-        // Not much use of the array, but the exercise asks for it
         blinkLed(led, arr[i]);
     }    
 }
@@ -76,30 +87,54 @@ void task7(char line[])
     for (int i = 0; i < strlen(line); i++) {
         if (line[i] >= 'a' && line[i] <= 'd') {
             int led = line[i] - ascii_offset;
-            enableLed(led);
-            lightUpLed(led);
-            _delay_ms(100);
-            lightDownLed(100);
+            enableOneLed(led);
+            lightUpOneLed(led);
+            _delay_ms(1000);
+            lightDownOneLed(led);
         }        
     }
 }
 
 void task8(char line[]) 
 {
-    const int ascii_offset = 96;
-    uint8_t leds = 0b00001111;
-    enableMultipleLeds(leds);
+    const int ascii_offset = 97;
+    enableAllLeds();
 
     for (int i = 0; i < strlen(line); i++) {
 
         if (line[i] >= 'a' && line[i] <= 'd') {
-
-            for(int j = 0; j < line[i] - ascii_offset; j++) {
-                lightUpMultipleLeds(leds);
-                _delay_ms(100);
-                lightDownMultipleLeds(leds);
-                _delay_ms(1000);
-            }               
+            switch(line[i]) {
+                case 'a':
+                    lightUpAllLeds();
+                    _delay_ms(100);
+                    lightDownAllLeds();
+                    break;
+                case 'b':
+                    for (int i = 0; i < 2; i++) {
+                    lightUpAllLeds();
+                    _delay_ms(100);
+                    lightDownAllLeds();
+                    _delay_ms(100);
+                    }       
+                    break;
+                case 'c':
+                    for (int i = 0; i < 3; i++) {
+                        lightUpAllLeds();
+                        _delay_ms(100);
+                        lightDownAllLeds();
+                        _delay_ms(100);
+                    }
+                    break;
+                case 'd':
+                    for (int i = 0; i < 4; i++) {
+                        lightUpAllLeds();
+                        _delay_ms(100);
+                        lightDownAllLeds();
+                        _delay_ms(100);
+                    }
+                    break;
+            }            
         }
+        _delay_ms(1000);
     }
 }

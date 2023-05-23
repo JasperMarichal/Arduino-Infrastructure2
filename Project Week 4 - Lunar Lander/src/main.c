@@ -112,7 +112,7 @@ void show_param(Log *current)
     lightDownLeds(0b00001111);
 
     for (int i = 0; i < n_full_tanks; i++)
-        lightUpLed(i);
+        lightUpOneLed(i);
 
     writeNumber(current->distance);
     // writeNumberAndWait(current->distance, 10);

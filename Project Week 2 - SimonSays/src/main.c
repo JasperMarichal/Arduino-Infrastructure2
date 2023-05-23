@@ -96,9 +96,9 @@ bool play(uint8_t series[])
 
         for(int j = 0; j < i; j++) {
             _delay_ms(PATTERN_DELAY);
-            lightUpLed(series[j]);
+            lightUpOneLed(series[j]);
             _delay_ms(PATTERN_DELAY);
-            lightDownLed(series[j]);
+            lightDownOneLed(series[j]);
         }
 
         printf("\nOK, now you!");

@@ -7,18 +7,17 @@
 //The next line defines a constant called NUMBER_OF_LEDS and assigns it the value of 4. This constant is used throughout the code to ensure that only the specified number of LEDs are manipulated.
 #define NUMBER_OF_LEDS 4 //Define is a "preprocessor directive". It ensures that every NUMBER_OF_LEDS will be replaced by 4 in the following code
 
-void enableLed ( int lednumber ) //C has no classes; functions can be included directly in the .c file.
+void enableOneLed ( int lednumber ) //C has no classes; functions can be included directly in the .c file.
 {
     if ( lednumber < 0 || lednumber > NUMBER_OF_LEDS-1 ) return;
-    DDRB |= ( 1 << ( PB2 + lednumber ));    //Check the tutorial "Writing to a Pin". We know from the documentation on
-                                            //the multifunctional shield that the LEDs start at PB2
+    DDRB |= ( 1 << ( PB2 + lednumber ));    
 }
 
 void enableMultipleLeds (uint8_t leds)
 {
     for ( int i = 0; i < NUMBER_OF_LEDS; i++ )
     {
-        if ( leds & ( 1 << i )) enableLed ( i );
+        if ( leds & ( 1 << i )) enableOneLed ( i );
     }
 }
 
@@ -27,17 +26,17 @@ void enableAllLeds (void)
     enableMultipleLeds ( 0b1111 );
 }
 
-void lightUpLed ( int lednumber )    //Note: enabled LEDs light up immediately ( 0 = on )
+void lightUpOneLed ( int lednumber )    
 {
     if ( lednumber < 0 || lednumber > NUMBER_OF_LEDS-1 ) return;
-    PORTB &= ~( 1 << ( PB2 + lednumber ));  //Check the tutorial on "Bit Operations" to know what happens in this line.
+    PORTB &= ~( 1 << ( PB2 + lednumber ));  
 }
 
 void lightUpMultipleLeds (uint8_t leds)
 {
     for ( int i = 0; i < NUMBER_OF_LEDS; i++ )
     {
-        if ( leds & ( 1 << i )) lightUpLed ( i );
+        if ( leds & ( 1 << i )) lightUpOneLed ( i );
     }
 }
 
@@ -46,17 +45,17 @@ void lightUpAllLeds (void)
     lightUpMultipleLeds ( 0b1111 );
 }
 
-void lightDownLed ( int lednumber )
+void lightDownOneLed ( int lednumber )
 {
     if ( lednumber < 0 || lednumber > 3 ) return;
-    PORTB |= ( 1 << ( PB2 + lednumber ));   //Make sure you understand this line as well!
+    PORTB |= ( 1 << ( PB2 + lednumber ));   
 }
 
 void lightDownMultipleLeds (uint8_t leds)
 {
     for ( int i = 0; i < NUMBER_OF_LEDS; i++ )
     {
-        if ( leds & ( 1 << i )) lightDownLed ( i );
+        if ( leds & ( 1 << i )) lightDownOneLed ( i );
     }
 }
 
@@ -65,7 +64,7 @@ void lightDownAllLeds (void)
     lightDownMultipleLeds ( 0b1111 );
 }
 
-void lightToggleLed ( int lednumber )
+void lightToggleOneLed ( int lednumber )
 {
     if ( lednumber < 0 || lednumber > NUMBER_OF_LEDS-1 ) return;
     PORTB ^= ( 1 << ( PB2 + lednumber ));
@@ -87,13 +86,13 @@ void dimLed(int lednumber, int percentage, int duration)
     }
     int onTime = (duration * percentage) / 100;
     int offTime = duration - onTime;
-    lightUpLed(lednumber);
+    lightUpOneLed(lednumber);
     _delay_ms(onTime);
-    lightDownLed(lednumber);
+    lightDownOneLed(lednumber);
     _delay_ms(offTime);
 }
 
-void fadeLed(int lednumber, int duration)
+void fadeInLed(int lednumber, int duration)
 {
     for (int i = 0; i < 100; i++)
     {
@@ -101,19 +100,29 @@ void fadeLed(int lednumber, int duration)
     }
 }
 
+void fadeOutLed(int lednumber, int duration)
+{
+    for (int i = 100; i > 0; i--)
+    {
+        dimLed(lednumber, i, duration);
+    }
+}
+
 void blinkLed(int lednumber, int duration) 
 {
-    lightUpLed(lednumber);
+    lightUpOneLed(lednumber);
     _delay_ms(duration);
-    lightDownLed(lednumber);
+    lightDownOneLed(lednumber);
     _delay_ms(duration);
 }
 
 void flashLed(int led, int flashes) 
 {
-    enableLed(led);
+    enableOneLed(led);
 
     for (int i = 0; i < flashes; i++) {
-        blinkLed(led, 100);
+        lightUpOneLed(led);
+        _delay_ms(500);
+        lightDownOneLed(led);
     }
 }

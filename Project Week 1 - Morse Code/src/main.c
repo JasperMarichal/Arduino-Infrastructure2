@@ -59,7 +59,7 @@ void countDownPattern()
     _delay_ms(500);
 
     for (int i = 0; i < 4; i++) {
-        lightDownLed(i);
+        lightDownOneLed(i);
         _delay_ms(500);
     }
 }

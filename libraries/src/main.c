@@ -14,10 +14,10 @@ int main(void)
          lightDownAllLeds(); // Turn off all four LEDs
          _delay_ms(1000); // Delay for one second
         
-        // lightToggleLed(2); // Toggle LED #2
+        // lightToggleOneLed(2); // Toggle LED #2
         // _delay_ms(500); // Delay for half a second
         
-        // lightToggleLed(0); // Toggle LED #0
+        // lightToggleOneLed(0); // Toggle LED #0
         // _delay_ms(500); // Delay for half a second
 
         // lightDownAllLeds(); // Turn off all four LEDs
@@ -32,6 +32,6 @@ int main(void)
       //  _delay_ms(1000);
 
         //   dimLed(2, 10, 20);
-        //   fadeLed(3,10);
+        //   fadeInLed(3,10);
     }
 }

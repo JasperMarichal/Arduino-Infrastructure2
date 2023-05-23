@@ -4,25 +4,16 @@
 #include <util/delay.h>
 #include <ledlib.h>
 
-void main(int iterations) {
-
+int main() {
     srand(0);
     enableAllLeds();
     lightDownAllLeds();
 
-    for (int i = 1; i <= iterations; i++) {
-        /* TODO led 2 and 3 blink at the beginning, then stay turned on */
-        uint8_t leds = rand() % 4;
-        leds += 2;
-        //printf("%d\n", leds);
-        lightUpAllLeds();
-        _delay_ms(rangernd(100, 1000));
-        //wrapper_delay_ms(rangernd(100, 1000));
-        lightDownAllLeds();
-        _delay_ms(100);
+    while(1){
+        int led = rand() % 4;
+        lightUpOneLed(led);
+        _delay_ms(500);
+        lightDownOneLed(led);
     }
-}
-
-int rangernd(int low, int up) {
-    return rand() % (up + 1 - low) + low;
+    return 0;
 }

@@ -32,6 +32,6 @@ int main(void)
       //  _delay_ms(1000);
 
         //   dimLed(2, 10, 20);
-        //   fadeLed(3,10);
+        //   fadeInLed(3,10);
     }
 }
