@@ -5,13 +5,7 @@
 #include <usart.h>
 #include <buttonlib.h>
 
-void main(){
-  writing_lines(); 
-}
-
-
-void writing_lines(void)
-{
+void main(void) { //writing_lines
     initUSART();
     enableButton(0);
     int bytes = 0;

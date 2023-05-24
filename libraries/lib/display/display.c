@@ -1,5 +1,4 @@
 #include "display.h"
-
 #include <avr/io.h>
 #include <util/delay.h>
 
@@ -9,6 +8,12 @@ const uint8_t SEGMENT_MAP[] = {0xC0, 0xF9, 0xA4, 0xB0, 0x99,
 
 /* Byte maps to select digit 1 to 4 */
 const uint8_t SEGMENT_SELECT[] = {0xF1, 0xF2, 0xF4, 0xF8};
+
+/* Segment byte maps for alphabet from a to z*/
+const uint8_t ALPHABET_MAP[] = {0x88, 0x83, 0xC6, 0xA1, 0x86, 0x8E, 0xC2,
+                                0x89, 0xCF, 0xE1, 0x8A, 0xC7, 0xEA, 0xC8,
+                                0xC0, 0x8C, 0x4A, 0xCC, 0x92, 0x87, 0xC1,
+                                0xC1, 0xD5, 0x89, 0x91, 0xA4};
 
 void initDisplay() {
   sbi(DDRD, LATCH_DIO);
@@ -79,4 +84,44 @@ void blankSegment(uint8_t segment)
   shift(0xFF, MSBFIRST);
   shift(SEGMENT_SELECT[segment], MSBFIRST);
   sbi(PORTD, LATCH_DIO);
+}
+
+void writeCharToSegment(uint8_t segment, char character) {
+  if (character >= 'a' && character <= 'z') {
+    character -= 32;
+  }
+
+  uint8_t value;
+  if (character >= 'A' && character <= 'Z') {
+    value = ALPHABET_MAP[character - 'A'];
+  } else {
+    value = 0xFF;
+  }
+
+  cbi(PORTD, LATCH_DIO);
+  shift(value, MSBFIRST);
+  shift(SEGMENT_SELECT[segment], MSBFIRST);
+  sbi(PORTD, LATCH_DIO);
+}
+
+void writeString(char* str) {
+  int length = strlen(str);
+  int numLetters = length < 4 ? length : 4;
+
+  for (int i = 0; i < numLetters; i++) {
+    writeCharToSegment(i, str[i]);
+  }
+}
+
+void writeStringAndWait(char* str, int delay) {
+  for (int i = 0; i < delay / 20; i++) {
+    writeCharToSegment(0, str[0]);
+    _delay_ms(5);
+    writeCharToSegment(1, str[1]);
+    _delay_ms(5);
+    writeCharToSegment(2, str[2]);
+    _delay_ms(5);
+    writeCharToSegment(3, str[3]);
+    _delay_ms(5);
+  }
 }
