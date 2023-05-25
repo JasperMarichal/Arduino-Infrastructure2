@@ -1,6 +1,7 @@
 #include "display.h"
 #include <avr/io.h>
 #include <util/delay.h>
+#include <string.h>
 
 /* Segment byte maps for numbers 0 to 9 */
 const uint8_t SEGMENT_MAP[] = {0xC0, 0xF9, 0xA4, 0xB0, 0x99,

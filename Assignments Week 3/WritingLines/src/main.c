@@ -5,7 +5,7 @@
 #include <usart.h>
 #include <buttonlib.h>
 
-void main(void) { //writing_lines
+int main() { //writing_lines
     initUSART();
     enableButton(0);
     int bytes = 0;
@@ -19,6 +19,7 @@ void main(void) { //writing_lines
             break;
         }
     }
+    return 0;
 }
 
 void write_lines_on_heap(char sentence[], int *bytes)
@@ -29,7 +30,7 @@ void write_lines_on_heap(char sentence[], int *bytes)
 
     if (s) {
         *bytes += size;
-        strcpy(sentence, s);
+        strcpy(s, sentence);
         s[len] = '\0';
         printf("\"%s\" is on heap ...\n%d bytes are now occupied on heap ...\n\n", s, *bytes);
         free(s);

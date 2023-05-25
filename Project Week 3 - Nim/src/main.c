@@ -11,11 +11,7 @@
 #define START_NUMBER 21
 #define BUTTON_DELAY 500
 
-// Todo: replace _delay_ms(BUTTON_DELAY) with loop_until_bit_is_clear
-// Todo: expansion
-
-void nim(void)
-{
+int main() { //nim
     int moves_len = 10;
     int *moves = malloc(moves_len * sizeof(int));
     int seed;
@@ -37,9 +33,6 @@ void nim(void)
 
     printf("\nSeed: %d", seed);
     printf("\nPress button 1 to proceed!");
-    
-    //enableButton(0);
-    //enableButton(1);
 
     while (!buttonPushed(0)) { 
         writeNumber(0);
@@ -93,7 +86,6 @@ void nim(void)
             moves_len += 5;
             moves = realloc(moves, moves_len);
             
-            // TODO: better error handling here
             if (!moves) {
                 free(moves);
                 break;
@@ -106,12 +98,13 @@ void nim(void)
     printf("\nPress button 1 to see a breakdown.");
 
     while(!buttonPushed(0)) {
-        writeString(player_next ? "PPPP" : "AAAA");
+        writeString(player_next ? "PPPP" : "CCCC");
     }
 
     stats(moves, moves_len, player_starts);
     free(moves);
     printf("\n\n============== END ==============");
+    return 0;
 }
 
 
@@ -142,7 +135,7 @@ void stats(int *moves, int moves_len, bool player_next)
 void lightUpSegments(int take, int matches_left, bool player_next)
 {
     writeNumberToSegment(0, take);
-    writeCharToSegment(1, player_next ? 'P' : 'A');
+    writeCharToSegment(1, player_next ? 'P' : 'C');
     writeNumberToSegment(2, matches_left / 10);
     writeNumberToSegment(3, matches_left % 10);
 }
