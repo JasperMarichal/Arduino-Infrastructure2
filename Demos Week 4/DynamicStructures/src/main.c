@@ -19,9 +19,9 @@ void fullDeck( CARD* deck )
         for ( int j = 0; j < 13; j++ )
         {
             index = ( i * 13 ) + j;
-            //TODO: use malloc to reserve just enough space for the suit
-            //TODO: copy the color to the allocated address space
-            //TODO: set the card's value
+            deck[index].suit = malloc(strlen(suits[i]) + 1); //TODO: use malloc to reserve just enough space for the suit
+            strcpy(deck[index].suit, suits[i]); //TODO: copy the color to the allocated address space
+            deck[index].value = j + 1; //TODO: set the card's value
         }
     }
 }
@@ -33,19 +33,19 @@ void showCard( CARD* theCard )
     {
         //TODO: update the following code:
         case 1:
-            printf( "ace of %s", theCard.suit );
+            printf( "ace of %s", theCard -> suit );
             break;
         case 11:
-            printf( "jack of %s", theCard.suit );
+            printf( "jack of %s", theCard -> suit );
             break;
         case 12:
-            printf( "queen of %s", theCard.suit );
+            printf( "queen of %s", theCard -> suit );
             break;
         case 13:
-            printf( "king of %s", theCard.suit );
+            printf( "king of %s", theCard -> suit );
             break;
         default:    //all other cards:
-            printf( "%d of %s", theCard.value, theCard.suit );
+            printf( "%d of %s", theCard -> value, theCard -> suit );
     }
 }
 
@@ -53,24 +53,27 @@ void showCard( CARD* theCard )
 CARD* drawCard( CARD deck[] )
 {
     int randm = rand() % 52;
-    //TODO: return the address of the random card
+    return &deck[randm]; //TODO: return the address of the random card
 }
 
 int main()
 {
     initUSART();
-    //TODO: use calloc to make the deck of cards
+    CARD* deck = calloc(52, sizeof(CARD)); //TODO: use calloc to make the deck of cards
     fullDeck( deck );
 
     //TODO: update the following code so that it compiles
     for ( int i = 0; i < 10; i++ )
     {
-        CARD card = drawCard( deck );
+        CARD* card = drawCard( deck );
         showCard( card );
         printf( "\n" );
     }
 
-    //TODO: free all allocated memory:
+    for (int i = 0; i < 52; i++) {
+        free(deck[i].suit); // TODO: free all allocated memory
+    }
+    free(deck);
     
     return 0;
 }

@@ -1,10 +1,6 @@
 #include <util/delay.h>
 #include <avr/io.h>
 
-int main() {
-
-}
-
 int Difficulty() {
 
 }
