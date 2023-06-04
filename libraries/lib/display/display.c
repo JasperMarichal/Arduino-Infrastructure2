@@ -126,3 +126,16 @@ void writeStringAndWait(char* str, int delay) {
     _delay_ms(5);
   }
 }
+
+void scrollText(char* str, int delay) {
+  int textLength = strlen(str);
+
+  for (int i = 0; i < textLength-3; i++) {
+    char scrollText[5];
+    for (int j = 0; j < 4; j++) {
+      int index = (i + j) % textLength;
+      scrollText[j] = str[index];
+    }
+    writeStringAndWait(scrollText, delay);
+  }
+}

@@ -22,3 +22,4 @@ void blankSegment(uint8_t segment);
 void writeCharToSegment(uint8_t segment, char character);
 void writeString(char* str);
 void writeStringAndWait(char* str, int delay);
+void scrollText(char* str, int delay);

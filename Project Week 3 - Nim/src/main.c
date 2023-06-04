@@ -76,7 +76,6 @@ int main() { //nim
 
                 break;
             }
-            
         }
 
         matches_left -= take;
