@@ -16,20 +16,17 @@ typedef struct {
     int betAmount;
     int finalNumber;
     int winAmount;
-}GameProgress;
+    int totalWins
+} GameProgress;
 
 //Define variables
 #define COINS 4
 #define BUTTON_DELAY 500
-volatile int coins_left = COINS;
 //While loop randomGenerator
 volatile uint32_t elapsedSeconds = 0;
 volatile int status = 0;
-//Display end text
-volatile uint32_t totalTime = 0;
-volatile int totalWins = 0;
 int secondsCounter = 0;
-int tenSeconds = 0;
+volatile GameProgress gameProgress = {.coins_left = COINS};
 
 //Random number generator methods
 int generateRandomNumber(int min, int max){
@@ -73,7 +70,7 @@ ISR(PCINT1_vect) {
     if(buttonPushed(1) && status == 1){ //This will show the amount of coins left
         _delay_ms(BUTTON_DELAY);
         while(!buttonPushed(1)){ //When button is clicked again it will go back to the game
-            writeNumber(coins_left);
+            writeNumber(gameProgress.coins_left);
         }
         _delay_ms(BUTTON_DELAY);
         return;
@@ -171,7 +168,140 @@ void playEndSound(){
     playTone(200, 200);
 }
 
+void updateGameProgress(int betAmount, int finalNumber, int winAmount){
+    gameProgress.betAmount = betAmount;
+    gameProgress.finalNumber = finalNumber;
+    gameProgress.winAmount = winAmount;
+}
+
+void checkWinCondition(int numSlots, int betAmount, int finalNumber){
+    //Check if the player has won
+    int check = 0;
+    int number = finalNumber;
+    for (int i = 1; i < numSlots; i++) {
+        if (number % 10 == (number / 10) % 10) {
+        check++;
+        }
+        number /= 10;
+    }
+
+    //If won add coins
+    int winAmount = 0;
+    if(numSlots-1 == check){
+    //Victory sound
+    printf("You won!\n");
+        playVictorySound();
+        if(numSlots == 2){
+            winAmount = 5;
+        } else if (numSlots == 3){
+            winAmount = 50;
+        } else if (numSlots == 4){
+            winAmount = 500;
+        }
+        winAmount *= betAmount;
+        printf("You won %d coins!\n", winAmount);
+        gameProgress.coins_left += winAmount;
+        writeNumberAndWait(winAmount, 2000);
+        gameProgress.totalWins++;
+        }
+
+    updateGameProgress(betAmount, finalNumber, winAmount);
+}
+
+void playSlotMachine(int numSlots, int betAmount){
+     // Slot machine
+        int* slotNumbers = (int*)malloc(numSlots * sizeof(int));
+        int* slotsActive = (int*)malloc(numSlots * sizeof(int));
+        int tenSeconds = 0;
+
+        for (int i = 0; i < numSlots; i++) {
+            if (slotsActive[i]==0) {
+                slotsActive[i] = 1;
+            }
+        }
+
+        while(tenSeconds < 75) {
+            for (int i = 0; i < numSlots; i++) {
+                if (slotsActive[i]) {
+                    // Change the number in the slot if it is still active
+                    slotNumbers[i] = generateRandomNumber(0, 9);
+                    }
+                    if (tenSeconds == 50 + (5*i)) {            
+                        // Check when slot needs to be locked and can't change anymore
+                        slotsActive[i] = 0;
+                    }
+                }
+                lightUpSegmentsRandomNumber(slotNumbers, numSlots);
+                tenSeconds++;
+            }
+        tenSeconds = 0;
+
+        //The final number will be showed one by one with a pause
+        int finalNumber = 0;
+        for (int i = 0; i < numSlots; i++) {
+            finalNumber = finalNumber * 10 + slotNumbers[i];
+            writeNumberToSegment(i, slotNumbers[i]);
+            _delay_ms(500);
+        }
+        //Free memory allocation
+        free(slotNumbers);
+        free(slotsActive);
+
+        //Click sound when final number is shown
+        playTone(1000,50);
+        //The final number will be shown in one time
+        printf("The final number is: %d\n", finalNumber);
+        writeNumberAndWait(finalNumber, 2000);
+
+        checkWinCondition(numSlots, betAmount, finalNumber);
+}
+
+void startGame() {
+    int betPlaced = 0;
+    int betMAX = 4;
+    int numSlots = 2;
+    int betAmount = 1;
+
+    printf("\n\nPress button 0 to change the number of slots and the bet amount\n");
+    printf("Display slots = %d and bet amount = %d\n", numSlots, betAmount);
+    printf("Press button 2 to place your bet\n");
+
+    while (1) { //Chose how many slots you wanna play + putting coin in
+        lightUpSegmentsLEDdisplayChoice(numSlots, betAmount);
+        if (buttonPushed(0)) { //Choose number of slots and bet amount
+        _delay_ms(BUTTON_DELAY);
+        if(!betPlaced){ //Choose number of slots if bet is not placed yet
+        numSlots = (numSlots % 3) + 2;
+        printf("Number of display slots: %d\n", numSlots);
+        } else { // Choose bet amount if bet is placed
+            if(gameProgress.coins_left < 4) {
+            betMAX = gameProgress.coins_left;
+            }
+        betAmount = (betAmount % betMAX) + 1;
+        printf("Bet amount: %d\n", betAmount);
+        }
+    } 
+        if (buttonPushed(2)) { //Placing bet
+        _delay_ms(BUTTON_DELAY);
+        if (gameProgress.coins_left > 0 && !betPlaced) {
+            betPlaced = 1;
+            lightUpAllLeds();
+            playMoneyFallingSound();
+        } else if (betPlaced && betAmount <= gameProgress.coins_left) {
+            lightDownAllLeds();
+            gameProgress.coins_left -= betAmount;
+            printf("Now the slot machine will activate\n");
+            remainingCoins(gameProgress.coins_left);
+            break;
+        }
+    }
+    }
+    
+    playSlotMachine(numSlots, betAmount);
+}
+
 int main() {
+    //Initialize everything
     initUSART();
     initDisplay();
     initButton();
@@ -185,9 +315,6 @@ int main() {
     PCICR |= _BV(PCIE1);
     PCMSK1 |= _BV(PCINT8);
 
-    int numSlots = 2;
-    int betAmount = 1;
-    /* This is done but not needed for testing the rest of the code*/
     printf("\n\n============== One-armed bandit ==============");
     printf("\n\nPress button 2 to proceed!\n");
     
@@ -198,11 +325,8 @@ int main() {
     }
     _delay_ms(BUTTON_DELAY);  
     
-    for (int i = 1; coins_left > 0 && coins_left < 9999; i++){
-
-        printf("Choose amount of slots\n");
-        int betPlaced = 0;
-        int betMAX = 4;
+    //The game will continue as long as there are coins or the max is reached
+    for (int i = 1; gameProgress.coins_left > 0 && gameProgress.coins_left < 9999; i++){
     
         //Setting the seed
         int seed;
@@ -212,118 +336,19 @@ int main() {
         srand(seed);
         printf("\nSeed: %d", seed);
 
-        while (1) { //Chose how many slots you wanna play + putting coin in
-            lightUpSegmentsLEDdisplayChoice(numSlots, betAmount);
-            if (buttonPushed(0)) { //Choose number of slots and bet amount
-                _delay_ms(BUTTON_DELAY);
-                if(!betPlaced){ //Choose number of slots if bet is not placed yet
-                    numSlots = (numSlots % 3) + 2;
-                    printf("Number of display slots: %d\n", numSlots);
-                } else { // Choose bet amount if bet is placed
-                    if(coins_left < 4) {
-                        betMAX = coins_left;
-                    }
-                    betAmount = (betAmount % betMAX) + 1;
-                    printf("Bet amount: %d\n", betAmount);
-                }
-            } 
-            if (buttonPushed(2)) { //Placing bet
-                _delay_ms(BUTTON_DELAY);
-                if (coins_left > 0 && !betPlaced) {
-                    //TODO: Fix problem with changing bet amount and stuff
-                    betPlaced = 1;
-                    lightUpAllLeds();
-                    playMoneyFallingSound();
-                    //TODO SOUND: Play sound for money falling into the slot machine
-                } else if (betPlaced && betAmount <= coins_left) {
-                    lightDownAllLeds();
-                    coins_left -= betAmount;
-                    printf("Now the slot machine will activate\n");
-                    remainingCoins(coins_left);
-                    break;
-                }
-            }
-        }
-
-        while (1) { // Slot machine
-            int* slotNumbers = (int*)malloc(numSlots * sizeof(int));
-            int* slotsActive = (int*)malloc(numSlots * sizeof(int));
-
-            for (int i = 0; i < numSlots; i++) {
-                if (slotsActive[i]==0) {
-                    slotsActive[i] = 1;
-                }
-            }
-            printf("Total seconds of secondCounter: %d\n", secondsCounter);
-
-            while(tenSeconds < 75) {
-                for (int i = 0; i < numSlots; i++) {
-                    if (slotsActive[i]) {
-                        // Change the number in the slot if it is still active
-                        slotNumbers[i] = generateRandomNumber(0, 9);
-                    }
-                    if (tenSeconds == 50 + (5*i)) {            
-                        // Check when slot needs to be locked and can't change anymore
-                        slotsActive[i] = 0;
-                    }
-                }
-                lightUpSegmentsRandomNumber(slotNumbers, numSlots);
-                tenSeconds++;
-            }
-            tenSeconds = 0;
-            printf("Total seconds of secondCounter: %d\n", secondsCounter);
-
-        //The final number will be showed one by one with a pause
-        int finalNumber = 0;
-        for (int i = 0; i < numSlots; i++) {
-            finalNumber = finalNumber * 10 + slotNumbers[i];
-            writeNumberToSegment(i, slotNumbers[i]);
-            _delay_ms(500);
-        }
-
-        //Click sound when final number is shown
-        playTone(1000,50);
-        //The final number will be shown in one time
-        printf("The final number is: %d\n", finalNumber);
-        writeNumberAndWait(finalNumber, 2000);
-
-        //Check if the player has won
-        int check = 0;
-        for (int i = 1; i < numSlots; i++){
-            if(slotNumbers[i] == slotNumbers[i-1]){
-                check++;
-            }
-        }
-        //Memory can be cleared
-        free(slotNumbers);
-        free(slotsActive);
-
-        //If won add coins
-        int winAmount = 0;
-        if(numSlots-1 == check){
-            //Victory sound
-            playVictorySound();
-            if(numSlots == 2){
-                winAmount = 5;
-            } else if (numSlots == 3){
-                winAmount = 50;
-            } else if (numSlots == 4){
-                winAmount = 500;
-            }
-            winAmount *= betAmount;
-            coins_left += winAmount;
-            writeNumberAndWait(winAmount, 2000);
-            totalWins++;
-        }
+        //Start of the game
+        startGame();        
         
+        //Print game progress
         printf("%d: %d coins available - %d coins bet - %d - %d coins won\n", 
-        i, coins_left, betAmount, finalNumber, winAmount);
+        i, gameProgress.coins_left, gameProgress.betAmount
+        , gameProgress.finalNumber, gameProgress.winAmount);
         
-        break;
-        }
-        writeNumberAndWait(coins_left, 3000);
+        //Show amount of coins left
+        writeNumberAndWait(gameProgress.coins_left, 3000);
         
-        if(coins_left > 0){
+        //Show text to go again
+        if(gameProgress.coins_left > 0){
             scrollText("GO AGAIN", 200);
         }
     }
@@ -332,16 +357,17 @@ int main() {
     playEndSound();
 
     //END text of the game
-    if(coins_left <= 0){
+    if(gameProgress.coins_left <= 0){ //If no coins left
         printf("You have no more coins left. Game over!\n");
         scrollText("You losed all your coins", 500);
-    } else if (coins_left >= 9999){
+    } else if (gameProgress.coins_left >= 9999){ //If max coins reached
         printf("You have won the game! Congratulations!\n");
         scrollText("Bank break", 500);
     }
 
+    //Show total game time and total wins
     printf("You played for a total of %d minutes and %d seconds. During this time you won %d times.\n"
-    ,  secondsCounter/60, secondsCounter%60, totalWins);
+    ,  secondsCounter/60, secondsCounter%60, gameProgress.totalWins);
     
     return 0;
 }
