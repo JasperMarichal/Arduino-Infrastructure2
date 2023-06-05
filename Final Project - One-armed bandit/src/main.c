@@ -16,11 +16,11 @@ typedef struct {
     int betAmount;
     int finalNumber;
     int winAmount;
-    int totalWins
+    int totalWins;
 } GameProgress;
 
 //Define variables
-#define COINS 4
+#define COINS 50
 #define BUTTON_DELAY 500
 //While loop randomGenerator
 volatile uint32_t elapsedSeconds = 0;
@@ -29,7 +29,7 @@ int secondsCounter = 0;
 volatile GameProgress gameProgress = {.coins_left = COINS};
 
 //Random number generator methods
-int generateRandomNumber(int min, int max){
+int generateRandomSymbol(int min, int max){
     return (rand() % (max - min + 1)) + min;
 }
 
@@ -91,9 +91,9 @@ void initButton(){
 }
 
 //LightUpSegments methods
-void lightUpSegmentsRandomNumber(int slotNumbers[], int numSlots){
+void lightUpSegmentsRandomSymbol(int slotSymbols[], int numSlots){
     for (int i = 0; i < numSlots; i++) {
-        writeNumberToSegment(i, slotNumbers[i]);  
+        writeSymbolToSegment(i, slotSymbols[i]);  
         _delay_ms(50);          
     }
 }
@@ -148,8 +148,8 @@ void playVictorySound(){
 void playMoneyFallingSound(){
     enableBuzzer();
     for (int i =0; i < 10; i++){
-        float frequency = generateRandomNumber(1000, 3000);
-        uint32_t duration = generateRandomNumber(50, 150);
+        float frequency = generateRandomSymbol(1000, 3000);
+        uint32_t duration = generateRandomSymbol(50, 150);
         playTone(frequency, duration);
         _delay_ms(100);
     }
@@ -224,14 +224,14 @@ void playSlotMachine(int numSlots, int betAmount){
             for (int i = 0; i < numSlots; i++) {
                 if (slotsActive[i]) {
                     // Change the number in the slot if it is still active
-                    slotNumbers[i] = generateRandomNumber(0, 9);
+                    slotNumbers[i] = generateRandomSymbol(0, 9);
                     }
                     if (tenSeconds == 50 + (5*i)) {            
                         // Check when slot needs to be locked and can't change anymore
                         slotsActive[i] = 0;
                     }
                 }
-                lightUpSegmentsRandomNumber(slotNumbers, numSlots);
+                lightUpSegmentsRandomSymbol(slotNumbers, numSlots);
                 tenSeconds++;
             }
         tenSeconds = 0;
@@ -240,7 +240,7 @@ void playSlotMachine(int numSlots, int betAmount){
         int finalNumber = 0;
         for (int i = 0; i < numSlots; i++) {
             finalNumber = finalNumber * 10 + slotNumbers[i];
-            writeNumberToSegment(i, slotNumbers[i]);
+            writeSymbolToSegment(i, slotNumbers[i]);
             _delay_ms(500);
         }
         //Free memory allocation
@@ -251,7 +251,7 @@ void playSlotMachine(int numSlots, int betAmount){
         playTone(1000,50);
         //The final number will be shown in one time
         printf("The final number is: %d\n", finalNumber);
-        writeNumberAndWait(finalNumber, 2000);
+        writeSymbolAndWait(finalNumber, 2000);
 
         checkWinCondition(numSlots, betAmount, finalNumber);
 }

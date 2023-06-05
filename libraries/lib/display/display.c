@@ -16,6 +16,10 @@ const uint8_t ALPHABET_MAP[] = {0x88, 0x83, 0xC6, 0xA1, 0x86, 0x8E, 0xC2,
                                 0xC0, 0x8C, 0x4A, 0xCC, 0x92, 0x87, 0xC1,
                                 0xC1, 0xD5, 0x89, 0x91, 0xA4};
 
+/* Segment byte maps for symbols*/
+const uint8_t SYMBOLS_MAP[] = {0x81, 0x42, 0x3C, 0x24, 0x18
+                              , 0x99, 0x66, 0x5A, 0x87, 0x1E};
+
 void initDisplay() {
   sbi(DDRD, LATCH_DIO);
   sbi(DDRD, CLK_DIO);
@@ -137,5 +141,25 @@ void scrollText(char* str, int delay) {
       scrollText[j] = str[index];
     }
     writeStringAndWait(scrollText, delay);
+  }
+}
+
+void writeSymbolToSegment(uint8_t segment, uint8_t symbol) {
+  cbi(PORTD, LATCH_DIO);
+  shift(SYMBOLS_MAP[symbol], MSBFIRST);
+  shift(SEGMENT_SELECT[segment], MSBFIRST);
+  sbi(PORTD, LATCH_DIO);
+}
+
+void writeSymbolAndWait(uint8_t symbol, int delay) {
+  for (int i = 0; i < delay / 20; i++) {
+    writeSymbolToSegment(0, symbol / 1000);
+    _delay_ms(5);
+    writeSymbolToSegment(1, (symbol / 100) % 10);
+    _delay_ms(5);
+    writeSymbolToSegment(2, (symbol / 10) % 10);
+    _delay_ms(5);
+    writeSymbolToSegment(3, symbol % 10);
+    _delay_ms(5);
   }
 }
