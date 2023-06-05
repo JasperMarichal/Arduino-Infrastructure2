@@ -1,3 +1,4 @@
+#define __DELAY_BACKWARD_COMPATIBLE__
 #include <util/delay.h>
 #include <avr/io.h>
 #include <stdio.h>
@@ -27,6 +28,8 @@ volatile int status = 0;
 //Display end text
 volatile uint32_t totalTime = 0;
 volatile int totalWins = 0;
+int secondsCounter = 0;
+int tenSeconds = 0;
 
 //Random number generator methods
 int generateRandomNumber(int min, int max){
@@ -58,8 +61,11 @@ void initTimer() {
 }
 
 ISR(TIMER0_COMPA_vect) {
+    if(elapsedSeconds == 1200 ){
+        secondsCounter++;
+        elapsedSeconds = 0;
+    }
     elapsedSeconds++;
-    totalTime++;
 }
 
 //Centre button interrupt to show amount of coins left
@@ -122,18 +128,19 @@ void enableBuzzer()
 
 void playTone( float frequency, uint32_t duration )
 {
-   uint32_t periodInMicro = ( uint32_t ) ( 1000000 / frequency ); 
-   uint32_t durationInMicro = duration * 1000;
-   for ( uint32_t time = 0; time < durationInMicro; time += periodInMicro )
+    uint32_t periodInMicro = ( uint32_t ) ( 1000000 / frequency ); //Calculate the period in microsecs from the freq
+   uint32_t durationInMicro = duration * 1000; //We express duration in microsecs
+   for ( uint32_t time = 0; time < durationInMicro; time += periodInMicro ) //See tutorial on Music for more info!
     {
-    PORTD &= ~( 1 << PD3 );
-    _delay_us( periodInMicro / 2 );
-    PORTD |= ( 1 << PD3 );
-    _delay_us( periodInMicro / 2 );
+    PORTD &= ~( 1 << PD3 ); //turn the buzzer on
+    _delay_us( periodInMicro / 2 ); //Wait for the half of the period
+    PORTD |= ( 1 << PD3 ); //Turn the buzzer off
+    _delay_us( periodInMicro / 2 ); //Wait again for half of the period
     }
 }
 
 void playVictorySound(){
+    enableBuzzer();
     playTone(500, 100);
     _delay_ms(200);
     playTone(700,150);
@@ -142,6 +149,7 @@ void playVictorySound(){
 }
 
 void playMoneyFallingSound(){
+    enableBuzzer();
     for (int i =0; i < 10; i++){
         float frequency = generateRandomNumber(1000, 3000);
         uint32_t duration = generateRandomNumber(50, 150);
@@ -151,6 +159,7 @@ void playMoneyFallingSound(){
 }
 
 void playEndSound(){
+    enableBuzzer();
     playTone(1000, 200);
     _delay_ms(200);
     playTone(800, 200);
@@ -171,7 +180,6 @@ int main() {
 
     enableAllLeds();
     lightDownAllLeds();
-    enableBuzzer();
 
     //Enable pin change interrupt for PCINT8
     PCICR |= _BV(PCIE1);
@@ -241,26 +249,30 @@ int main() {
             int* slotNumbers = (int*)malloc(numSlots * sizeof(int));
             int* slotsActive = (int*)malloc(numSlots * sizeof(int));
 
-            elapsedSeconds = 0;
-            printf("The slot machine is active with %lu minutes and %lu seconds\n"
-            , elapsedSeconds / 60, elapsedSeconds % 60);
+            for (int i = 0; i < numSlots; i++) {
+                if (slotsActive[i]==0) {
+                    slotsActive[i] = 1;
+                }
+            }
+            printf("Total seconds of secondCounter: %d\n", secondsCounter);
 
-            while(elapsedSeconds < 10000) {
+            while(tenSeconds < 75) {
                 for (int i = 0; i < numSlots; i++) {
                     if (slotsActive[i]) {
                         // Change the number in the slot if it is still active
                         slotNumbers[i] = generateRandomNumber(0, 9);
                     }
-                    if (elapsedSeconds == 10000 + (100*i)) {            
+                    if (tenSeconds == 50 + (5*i)) {            
                         // Check when slot needs to be locked and can't change anymore
                         slotsActive[i] = 0;
                     }
                 }
                 lightUpSegmentsRandomNumber(slotNumbers, numSlots);
+                tenSeconds++;
             }
+            tenSeconds = 0;
+            printf("Total seconds of secondCounter: %d\n", secondsCounter);
 
-            printf("The slot machine ended with %lu minutes and %lu seconds\n"
-            , elapsedSeconds / 60, elapsedSeconds % 60);
         //The final number will be showed one by one with a pause
         int finalNumber = 0;
         for (int i = 0; i < numSlots; i++) {
@@ -269,11 +281,11 @@ int main() {
             _delay_ms(500);
         }
 
+        //Click sound when final number is shown
+        playTone(1000,50);
         //The final number will be shown in one time
         printf("The final number is: %d\n", finalNumber);
         writeNumberAndWait(finalNumber, 2000);
-        //TODO SOUND: Click sound final numbers are displayed
-        playTone(1000,50);
 
         //Check if the player has won
         int check = 0;
@@ -282,10 +294,14 @@ int main() {
                 check++;
             }
         }
+        //Memory can be cleared
+        free(slotNumbers);
+        free(slotsActive);
+
         //If won add coins
         int winAmount = 0;
         if(numSlots-1 == check){
-            //TODO SOUND: Victory sound
+            //Victory sound
             playVictorySound();
             if(numSlots == 2){
                 winAmount = 5;
@@ -303,8 +319,6 @@ int main() {
         printf("%d: %d coins available - %d coins bet - %d - %d coins won\n", 
         i, coins_left, betAmount, finalNumber, winAmount);
         
-        free(slotNumbers);
-        free(slotsActive);
         break;
         }
         writeNumberAndWait(coins_left, 3000);
@@ -314,9 +328,9 @@ int main() {
         }
     }
 
-    //TODO SOUND: Play sound for game over
+    //Play sound for game over
     playEndSound();
-        
+
     //END text of the game
     if(coins_left <= 0){
         printf("You have no more coins left. Game over!\n");
@@ -326,9 +340,8 @@ int main() {
         scrollText("Bank break", 500);
     }
 
-    printf("You played for a total of %lu minutes and %lu seconds. During this time you won %d times.\n"
-    , totalTime / 60, totalTime % 60, totalWins);
-    
+    printf("You played for a total of %d minutes and %d seconds. During this time you won %d times.\n"
+    ,  secondsCounter/60, secondsCounter%60, totalWins);
     
     return 0;
 }
